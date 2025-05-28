@@ -1,0 +1,16 @@
+monitor_server_task:
+  description: |
+    Connect to the server at host '{ssh_host}', port '{ssh_port}',
+    using username '{ssh_username}'.
+    Authenticate using password '{ssh_password}' if provided, otherwise use
+    the private key at '{ssh_private_key_path}'.
+    Once connected, gather the CPU, memory, disk, network, and process status.
+    Ensure all collected information is returned.
+  expected_output: |
+    A dictionary containing the server's vital statistics:
+    - cpu_usage_percentage
+    - memory (total, used, free, available)
+    - disk_root (size, used, avail, use_percentage)
+    - network_summary
+    - processes_top5_cpu
+    - Any errors encountered during the process should be in an 'error' key.
