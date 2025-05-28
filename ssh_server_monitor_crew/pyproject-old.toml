@@ -7,13 +7,12 @@ authors = [
 ]
 requires-python = ">=3.10,<3.13"
 dependencies = [
-    "crewai[tools]>=0.102.0,<1.0.0",
+    "crewai>=0.30.0",
+    "crewai-tools>=0.1.0",
     "paramiko>=3.0.0",
 ]
 
 [project.scripts]
-ssh_server_monitor_crew = "ssh_server_monitor_crew.main:run"
-run_crew = "ssh_server_monitor_crew.main:run"
 
 [build-system]
 requires = [

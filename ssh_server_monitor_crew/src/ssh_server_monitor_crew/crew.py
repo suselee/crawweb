@@ -1,6 +1,6 @@
 from crewai import Agent, Crew, Process, Task
 from crewai.project import CrewBase, agent, crew, task
-from langchain_openai import ChatOpenAI # Or any other LLM you prefer
+#from langchain_openai import ChatOpenAI # Or any other LLM you prefer
 
 # Import the custom tool
 # Assuming server_monitor_tool.py is in src/ssh_server_monitor_crew/tools/
@@ -22,7 +22,7 @@ class ServerMonitorCrew():
             tools=[self.server_tool], # Pass the tool to the agent
             verbose=True,
             allow_delegation=False,
-            llm=ChatOpenAI(model_name="gpt-4", temperature=0.7) # Example LLM
+            #llm=ChatOpenAI(model_name="gpt-4", temperature=0.7) # Example LLM
         )
 
     @task
@@ -40,5 +40,5 @@ class ServerMonitorCrew():
             agents=self.agents, # Automatically populated by @agent decorator
             tasks=self.tasks, # Automatically populated by @task decorator
             process=Process.sequential,
-            verbose=2
+            verbose=True
         )
