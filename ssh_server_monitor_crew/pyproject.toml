@@ -1,0 +1,15 @@
+[tool.poetry]
+name = "ssh_server_monitor_crew"
+version = "0.1.0"
+description = "A crewAI project to monitor server stats via SSH."
+authors = ["Your Name <you@example.com>"]
+
+[tool.poetry.dependencies]
+python = ">=3.10,<3.13"
+crewai = "^0.30.0" # Or a recent version
+crewai-tools = "^0.1.0" # Or a recent version
+paramiko = "^3.0.0" # Dependency for our custom tool
+
+[build-system]
+requires = ["poetry-core>=1.0.0"]
+build-backend = "poetry.core.masonry.api"
