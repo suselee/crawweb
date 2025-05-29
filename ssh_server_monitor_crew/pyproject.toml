@@ -9,6 +9,8 @@ python = ">=3.10,<3.13"
 crewai = "^0.30.0" # Or a recent version
 crewai-tools = "^0.1.0" # Or a recent version
 paramiko = "^3.0.0" # Dependency for our custom tool
+pandas = "^2.0.0"  # For data manipulation and Excel output
+openpyxl = "^3.0.0" # Required by pandas for .xlsx file operations
 
 [build-system]
 requires = ["poetry-core>=1.0.0"]

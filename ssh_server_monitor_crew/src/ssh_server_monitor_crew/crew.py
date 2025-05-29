@@ -25,12 +25,30 @@ class ServerMonitorCrew():
             llm=ChatOpenAI(model_name="gpt-4", temperature=0.7) # Example LLM
         )
 
+    @agent
+    def report_generator_agent(self) -> Agent:
+        return Agent(
+            config=self.agents_config['report_generator_agent'],
+            verbose=True,
+            allow_delegation=False,
+            llm=ChatOpenAI(model_name="gpt-4", temperature=0.7) # Or your chosen LLM
+        )
+
     @task
     def monitor_task(self) -> Task:
         return Task(
             config=self.tasks_config['monitor_server_task'],
             agent=self.server_admin_agent(),
             # Inputs for the task will be passed during kickoff
+        )
+
+    @task
+    def generate_report_task(self) -> Task:
+        return Task(
+            config=self.tasks_config['generate_report_task'],
+            agent=self.report_generator_agent()
+            # No explicit context needed here, as 'server_data_list' will be in the inputs
+            # passed during the specific kickoff for this task from main.py
         )
 
     @crew

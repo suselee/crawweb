@@ -14,3 +14,21 @@ monitor_server_task:
     - network_summary
     - processes_top5_cpu
     - Any errors encountered during the process should be in an 'error' key.
+
+generate_report_task:
+  description: |
+    Process the provided list of server data objects (named 'server_data_list' in the input).
+    Each object in the list contains a 'hostname' and its corresponding 'data' (which is either a dictionary of metrics or an error message/object).
+    For each server in the list:
+    - Create a dedicated section in the Markdown report, starting with a heading like "## Server: [hostname]".
+    - If the server's 'data' contains an 'error' field, report this error (e.g., "Status: Error - [error message]").
+    - If the server's 'data' contains metrics, format these metrics clearly (CPU, memory, disk, network, processes).
+    - Ensure the final output is a single Markdown string consolidating information for all servers.
+    The input variable 'server_data_list' will be available in the context.
+  expected_output: |
+    A single string containing the consolidated server health report in Markdown format,
+    covering all servers from the input list. Each server's status should be clearly presented
+    under its own section. This report will be saved to 'server_status_report.md'.
+  output_file: server_status_report.md
+  # This task will now use the 'server_data_list' from the main.py kickoff.
+  # The context from 'monitor_server_task' is implicitly part of how 'server_data_list' is constructed.
