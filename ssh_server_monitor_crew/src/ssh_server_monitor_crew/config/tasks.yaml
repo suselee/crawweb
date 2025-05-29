@@ -14,3 +14,23 @@ monitor_server_task:
     - network_summary
     - processes_top5_cpu
     - Any errors encountered during the process should be in an 'error' key.
+
+
+generate_report_task:
+  description: |
+    Take the server health statistics dictionary provided as context.
+    Analyze this data (CPU usage, memory, disk space, network summary, top processes).
+    Generate a comprehensive yet easy-to-understand server health report in Markdown format.
+    The report should include:
+    - A summary of CPU usage.
+    - A summary of memory usage (total, used, free, available).
+    - A summary of root disk usage (size, used, avail, use percentage).
+    - A brief overview of network statistics.
+    - A list of the top processes.
+    - If an 'error' key is present in the input data, this should be prominently mentioned in the report.
+    Structure the report clearly with headings for each section.
+  expected_output: |
+    A string containing the full server health report in Markdown format.
+    This report will be saved to a file named 'server_status_report.md'.
+    The language of the report should be Chinese.
+  output_file: server_status_report.md    
