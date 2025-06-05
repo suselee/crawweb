@@ -151,5 +151,5 @@ if __name__ == '__main__':
     # else:
     #     print("Private key authentication test skipped or results_key was None/empty.")
     print("Private key authentication example commented out by default. Uncomment the section above and fill in details to test.")
-    
+
     print("\nExample script finished. Manually uncomment and configure the authentication method you wish to test.")
