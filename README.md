@@ -1,2 +1,2 @@
 # crawweb
-Extract dynamic web pages and convert them to Markdown
+Extract dynamic server info and convert them to Markdown
