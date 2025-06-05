@@ -15,22 +15,50 @@ monitor_server_task:
     - processes_top5_cpu
     - Any errors encountered during the process should be in an 'error' key.
 
-
 generate_report_task:
   description: |
-    Take the server health statistics dictionary provided as context.
-    Analyze this data (CPU usage, memory, disk space, network summary, top processes).
-    Generate a comprehensive yet easy-to-understand server health report in Markdown format.
-    The report should include:
-    - A summary of CPU usage.
-    - A summary of memory usage (total, used, free, available).
-    - A summary of root disk usage (size, used, avail, use percentage).
-    - A brief overview of network statistics.
-    - A list of the top processes.
-    - If an 'error' key is present in the input data, this should be prominently mentioned in the report.
-    Structure the report clearly with headings for each section.
+    Your SOLE task is to generate a CONSOLIDATED Markdown health report based on a list of server data provided to you in an input variable named 'server_data_list'.
+    This 'server_data_list' is a Python list of dictionaries. Each dictionary in the list represents ONE server and has two keys: 'hostname' (a string) and 'data' (another dictionary containing metrics or an error message).
+
+    You MUST iterate through EACH dictionary in the 'server_data_list'.
+    For EACH server dictionary, you MUST extract its 'hostname' and its 'data'.
+    You MUST NOT use any information outside of the 'server_data_list' for generating the report.
+    DO NOT invent any servers, hostnames, metrics, or error messages.
+    The number of servers in your report MUST EXACTLY match the number of items in the 'server_data_list'.
+
+    The report MUST start with:
+    # Server Health Report
+    Processed [N] server(s). (Replace [N] with the actual count of servers from 'server_data_list').
+
+    Then, for EACH server from 'server_data_list':
+    1. Create a section: ## Server: [hostname_from_server_dict] (Replace [hostname_from_server_dict] with the actual hostname).
+    2. Look at the 'data' dictionary for this server:
+       - If 'data' contains an 'error' key (e.g., {'error': 'SSH Connection Failed', 'details': '...'}), print "**Status:** Error" and on a new line "  **Details:** [content_of_error_key]". You should also include the content of the 'details' key if present in the 'data' dictionary.
+       - If 'data' contains a 'parsing_error' key (e.g., {'parsing_error': 'Could not parse...', 'raw_content': '...'}), print "**Status:** Data Parsing Error" and on a new line "  **Details:** [content_of_parsing_error_key]. Raw content was: [content_of_raw_content_key]".
+       - Otherwise (if no 'error' or 'parsing_error' key, assume metrics are present): Print "**Status:** Metrics Collected" and then list each available metric from the 'data' dictionary (e.g., 'cpu_usage_percentage', 'memory', 'disk_root', 'network_summary', 'processes_top5_cpu'). Format them clearly. For 'processes_top5_cpu', display its string value in a text code block. Example for metrics:
+         - **CPU Usage:** [value_from_data_cpu_usage_percentage]
+         - **Memory:** [value_from_data_memory]
+         - **Disk (Root):** [value_from_data_disk_root]
+         - **Network Summary:** [value_from_data_network_summary]
+         - **Top Processes:**
+           ```text
+           [value_from_data_processes_top5_cpu]
+           ```
+
+    Example for a server with an error:
+    ## Server: server2
+    **Status:** Error
+      **Details:** SSH Connection Failed.
+
+    Produce ONLY the Markdown report as a single string.
+
+    ---
+    RAW SERVER DATA LIST TO PROCESS:
+    {server_data_list}
   expected_output: |
-    A string containing the full server health report in Markdown format.
-    This report will be saved to a file named 'server_status_report.md'.
-    The language of the report should be Chinese.
-  output_file: server_status_report.md    
+    A single string containing the consolidated server health report in Markdown format,
+    covering all servers from the input list. Each server's status should be clearly presented
+    under its own section. This report will be saved to 'server_status_report.md'.
+  output_file: server_status_report.md
+  # This task will now use the 'server_data_list' from the main.py kickoff.
+  # The context from 'monitor_server_task' is implicitly part of how 'server_data_list' is constructed.

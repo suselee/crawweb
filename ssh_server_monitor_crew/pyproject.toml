@@ -9,14 +9,19 @@ requires-python = ">=3.10,<3.13"
 dependencies = [
     "crewai[tools]>=0.102.0,<1.0.0",
     "paramiko>=3.0.0",
+    "pandas>=2.0.0",
+    "openpyxl>=3.0.0"
 ]
 
 [project.scripts]
-ssh_server_monitor_crew = "ssh_server_monitor_crew.main:run"
-run_crew = "ssh_server_monitor_crew.main:run"
+ssh_server_monitor_crew = "ssh_server_monitor_crew.main:main"
+run_crew = "ssh_server_monitor_crew.main:main"
 
 [build-system]
 requires = [
     "hatchling",
 ]
 build-backend = "hatchling.build"
+
+[tool.crewai]
+type = "crew"
