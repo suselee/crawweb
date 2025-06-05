@@ -35,15 +35,6 @@ class ServerMonitorCrew():
             #llm=ChatOpenAI(model_name="gpt-4", temperature=0.7) # Or your chosen LLM
         )
 
-    @agent
-    def report_generator_agent(self) -> Agent:
-        return Agent(
-            config=self.agents_config['report_generator_agent'],
-            verbose=True,
-            allow_delegation=False,
-            llm=ChatOpenAI(model_name="gpt-4", temperature=0.7) # Or your chosen LLM
-        )
-
     @task
     def monitor_task(self) -> Task:
         return Task(
