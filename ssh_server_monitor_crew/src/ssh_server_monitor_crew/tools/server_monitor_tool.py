@@ -18,7 +18,7 @@ class ServerMonitorTool(BaseTool):
 
     def _run(self, **kwargs) -> Dict[str, str]:
         host = kwargs.get("host")
-        port = kwargs.get("port", 22) # Default to 22 if not provided
+        port = kwargs.get("port", 22)
         username = kwargs.get("username")
         password = kwargs.get("password")
         private_key_path = kwargs.get("private_key_path")
@@ -28,81 +28,85 @@ class ServerMonitorTool(BaseTool):
 
         client = paramiko.SSHClient()
         client.set_missing_host_key_policy(paramiko.AutoAddPolicy())
-
         server_stats: Dict[str, str] = {}
 
         try:
+            connect_args = {
+                "hostname": host,
+                "port": port,
+                "username": username,
+                "timeout": 10
+            }
             if private_key_path:
                 try:
                     pkey = paramiko.RSAKey.from_private_key_file(private_key_path)
-                    client.connect(hostname=host, port=port, username=username, pkey=pkey, timeout=10)
-                except FileNotFoundError:
-                    return {"error": f"Private key file not found at {private_key_path}."}
+                    connect_args["pkey"] = pkey
                 except paramiko.PasswordRequiredException:
-                    return {"error": f"Private key at {private_key_path} is encrypted and requires a password (not supported)."}
+                    # client.close() # Client not connected yet
+                    return {"error": f"Private key file at {private_key_path} is encrypted and requires a passphrase (not supported)."}
+                except FileNotFoundError:
+                     # client.close() # Client not connected yet
+                     return {"error": f"Private key file not found at {private_key_path}."}
                 except Exception as e: # Catch other key-related errors
-                    return {"error": f"Error with private key {private_key_path}: {e}"}
+                    return {"error": f"Error with private key {private_key_path}: {str(e)}"}
+            else:
+                connect_args["password"] = password
 
-            else: # Password authentication
-                client.connect(hostname=host, port=port, username=username, password=password, timeout=10)
+            client.connect(**connect_args)
 
-            # CPU Usage: 100 - (idle + steal)
-            # vmstat 1 2 means 1 second interval, 2 reports. We take the second report (tail -1)
-            # $15 is idle time, $16 is steal time for Xen guests. For others, $16 might be 0 or something else.
-            # A more robust way might be to use `mpstat` or parse `top` more carefully.
-            # For simplicity, using vmstat. If $16 is not relevant/present, it's usually 0.
+            # CPU Usage
             cpu_command = "vmstat 1 2 | tail -1 | awk '{print 100-($15+$16)}'"
             stdin, stdout, stderr = client.exec_command(cpu_command)
             cpu_usage = stdout.read().decode().strip()
-            cpu_error = stderr.read().decode().strip()
-            server_stats['cpu_usage_percentage'] = cpu_usage if cpu_usage and not cpu_error else "N/A"
-            if cpu_error: server_stats['cpu_error'] = cpu_error
+            cpu_err = stderr.read().decode().strip()
+            server_stats['cpu_usage_percentage'] = cpu_usage if cpu_usage and not cpu_err else "N/A"
+            if cpu_err: server_stats['cpu_error'] = cpu_err
 
             # Memory Usage
             mem_command = "free -m | awk '/Mem:/ {printf \"total: %sMB, used: %sMB, free: %sMB, available: %sMB\", $2, $3, $4, $7}'"
             stdin, stdout, stderr = client.exec_command(mem_command)
             mem_usage = stdout.read().decode().strip()
-            mem_error = stderr.read().decode().strip()
-            server_stats['memory'] = mem_usage if mem_usage and not mem_error else "N/A"
-            if mem_error: server_stats['memory_error'] = mem_error
-            
-            # Disk Usage (Root filesystem)
-            disk_command = "df -h / | tail -n 1 | awk '{printf \"path: %s, size: %s, used: %s, avail: %s, use_percentage: %s\", $6, $2, $3, $4, $5}'"
+            mem_err = stderr.read().decode().strip()
+            server_stats['memory'] = mem_usage if mem_usage and not mem_err else "N/A"
+            if mem_err: server_stats['memory_error'] = mem_err
+
+            # Disk Usage (Root filesystem) - using the awk from prompt, but key name from existing code for consistency
+            disk_command = "df -h / | tail -n 1 | awk '{printf \"size: %s, used: %s, avail: %s, use_percentage: %s\", $2, $3, $4, $5}'"
             stdin, stdout, stderr = client.exec_command(disk_command)
             disk_usage = stdout.read().decode().strip()
-            disk_error = stderr.read().decode().strip()
-            server_stats['disk_root'] = disk_usage if disk_usage and not disk_error else "N/A"
-            if disk_error: server_stats['disk_error'] = disk_error
+            disk_err = stderr.read().decode().strip()
+            server_stats['disk_root'] = disk_usage if disk_usage and not disk_err else "N/A" # Kept key 'disk_root'
+            if disk_err: server_stats['disk_error'] = disk_err
 
             # Network Statistics Summary
-            net_command = "ss -s" # Provides a summary of TCP, UDP, etc.
+            net_command = "ss -s"
             stdin, stdout, stderr = client.exec_command(net_command)
             net_stats = stdout.read().decode().strip()
-            net_error = stderr.read().decode().strip()
-            server_stats['network_summary'] = net_stats if net_stats and not net_error else "N/A"
-            if net_error: server_stats['network_error'] = net_error
-            
-            # Top 5 Processes by CPU
-            # USER PID %CPU %MEM COMMAND
-            proc_command = "ps aux --sort=-%cpu | head -n 6 | awk 'NR>1 {print $1, $2, $3, $4, substr($0, index($0,$11))}'"
+            net_err = stderr.read().decode().strip()
+            server_stats['network_summary'] = net_stats if net_stats and not net_err else "N/A"
+            if net_err: server_stats['network_error'] = net_err
+
+            # Top 5 Processes by CPU - using the awk from prompt
+            proc_command = "ps aux --sort=-%cpu | head -n 6 | awk 'NR>1 {print $1, $2, $3, $4, $11}'"
             stdin, stdout, stderr = client.exec_command(proc_command)
             proc_list = stdout.read().decode().strip()
-            proc_error = stderr.read().decode().strip()
-            server_stats['processes_top5_cpu'] = proc_list if proc_list and not proc_error else "N/A"
-            if proc_error: server_stats['process_error'] = proc_error
+            proc_err = stderr.read().decode().strip()
+            server_stats['processes_top5_cpu'] = proc_list if proc_list and not proc_err else "N/A"
+            if proc_err: server_stats['process_error'] = proc_err
 
         except paramiko.AuthenticationException:
             server_stats['error'] = "SSH Authentication Failed. Check credentials or SSH server configuration."
-        except paramiko.SSHException as e:
-            server_stats['error'] = f"SSH Connection Error: {e}. Check host, port, and network connectivity."
-        except TimeoutError: # Specific for client.connect timeout
+        except paramiko.SSHException as e: # Covers various SSH connection issues like host not found, connection refused
+            server_stats['error'] = f"SSH Connection Error: {str(e)}"
+        # TimeoutError is a subclass of OSError, can be caught by broader Exception or specifically.
+        # paramiko.SSHClient.connect already has a timeout parameter. If that expires, it raises socket.timeout, which is an OSError.
+        except TimeoutError: # Explicitly catch if needed, though SSHException might cover it.
              server_stats['error'] = f"SSH Connection to {host}:{port} timed out."
         except Exception as e:
-            server_stats['error'] = f"An unexpected error occurred: {e}"
+            server_stats['error'] = f"An unexpected error occurred in ServerMonitorTool: {str(e)}"
         finally:
             if client:
                 client.close()
-
         return server_stats
 
 if __name__ == '__main__':
@@ -147,5 +151,5 @@ if __name__ == '__main__':
     # else:
     #     print("Private key authentication test skipped or results_key was None/empty.")
     print("Private key authentication example commented out by default. Uncomment the section above and fill in details to test.")
-    
+
     print("\nExample script finished. Manually uncomment and configure the authentication method you wish to test.")

@@ -1,3 +1,4 @@
+from typing import List, Optional, Tuple # Updated import
 from crewai import Agent, Crew, Process, Task
 from crewai.project import CrewBase, agent, crew, task
 from langchain_openai import ChatOpenAI # Or any other LLM you prefer
@@ -11,7 +12,7 @@ class ServerMonitorCrew():
     """ServerMonitorCrew a crew to monitor server stats via SSH."""
     agents_config = 'config/agents.yaml'
     tasks_config = 'config/tasks.yaml'
-    
+
     # Initialize the custom tool
     server_tool = ServerMonitorTool()
 
@@ -52,11 +53,15 @@ class ServerMonitorCrew():
         )
 
     @crew
-    def crew(self) -> Crew:
-        """Creates the ServerMonitorCrew crew"""
+    def crew(self, specific_tasks: Optional[Tuple[Task, ...]] = None) -> Crew: # Updated signature
+        """Creates the ServerMonitorCrew crew.
+        Can be initialized with a specific tuple of tasks to run, # Updated docstring
+        otherwise defaults to all tasks defined in the crew.
+        """
+        tasks_to_run = specific_tasks if specific_tasks is not None else self.tasks
         return Crew(
-            agents=self.agents, # Automatically populated by @agent decorator
-            tasks=self.tasks, # Automatically populated by @task decorator
+            agents=self.agents,
+            tasks=tasks_to_run,
             process=Process.sequential,
-            verbose=2
+            verbose=True
         )

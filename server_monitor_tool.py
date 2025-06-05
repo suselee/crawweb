@@ -65,7 +65,7 @@ class ServerMonitorTool(BaseTool):
             mem_error = stderr.read().decode().strip()
             server_stats['memory'] = mem_usage if mem_usage and not mem_error else "N/A"
             if mem_error: server_stats['memory_error'] = mem_error
-            
+
             # Disk Usage (Root filesystem)
             disk_command = "df -h / | tail -n 1 | awk '{printf \"path: %s, size: %s, used: %s, avail: %s, use_percentage: %s\", $6, $2, $3, $4, $5}'"
             stdin, stdout, stderr = client.exec_command(disk_command)
@@ -81,7 +81,7 @@ class ServerMonitorTool(BaseTool):
             net_error = stderr.read().decode().strip()
             server_stats['network_summary'] = net_stats if net_stats and not net_error else "N/A"
             if net_error: server_stats['network_error'] = net_error
-            
+
             # Top 5 Processes by CPU
             # USER PID %CPU %MEM COMMAND
             proc_command = "ps aux --sort=-%cpu | head -n 6 | awk 'NR>1 {print $1, $2, $3, $4, substr($0, index($0,$11))}'"
@@ -147,5 +147,5 @@ if __name__ == '__main__':
     # else:
     #     print("Private key authentication test skipped or results_key was None/empty.")
     print("Private key authentication example commented out by default. Uncomment the section above and fill in details to test.")
-    
+
     print("\nExample script finished. Manually uncomment and configure the authentication method you wish to test.")
