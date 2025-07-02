@@ -67,12 +67,25 @@ class ServerMonitorTool(BaseTool):
             if mem_error: server_stats['memory_error'] = mem_error
 
             # Disk Usage (Root filesystem)
-            disk_command = "df -h / | tail -n 1 | awk '{printf \"path: %s, size: %s, used: %s, avail: %s, use_percentage: %s\", $6, $2, $3, $4, $5}'"
+            disk_command = "df -h / | tail -n 1 | awk '{printf "path: %s, size: %s, used: %s, avail: %s, use_percentage: %s", $6, $2, $3, $4, $5}'"
             stdin, stdout, stderr = client.exec_command(disk_command)
             disk_usage = stdout.read().decode().strip()
             disk_error = stderr.read().decode().strip()
             server_stats['disk_root'] = disk_usage if disk_usage and not disk_error else "N/A"
             if disk_error: server_stats['disk_error'] = disk_error
+
+            # Disk I/O Statistics (for FreeBSD)
+            # Using iostat -x to get extended I/O statistics since boot.
+            io_command = "iostat -x"
+            stdin, stdout, stderr = client.exec_command(io_command)
+            io_stats = stdout.read().decode().strip()
+            io_error = stderr.read().decode().strip()
+            # Check if the command is available or fails, which might happen on non-FreeBSD systems.
+            if "command not found" in io_error.lower() or not io_stats:
+                server_stats['disk_io'] = "N/A (Command 'iostat -x' likely not available or failed)"
+            else:
+                server_stats['disk_io'] = io_stats
+            if io_error: server_stats['disk_io_error'] = io_error
 
             # Network Statistics Summary
             net_command = "ss -s" # Provides a summary of TCP, UDP, etc.
